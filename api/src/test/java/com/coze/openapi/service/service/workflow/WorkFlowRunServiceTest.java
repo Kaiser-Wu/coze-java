@@ -21,6 +21,8 @@ import com.coze.openapi.client.workflows.run.RunWorkflowResp;
 import com.coze.openapi.client.workflows.run.model.WorkflowEvent;
 import com.coze.openapi.client.workflows.run.model.WorkflowEventType;
 import com.coze.openapi.utils.Utils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.reactivex.subscribers.TestSubscriber;
 import okhttp3.MediaType;
@@ -30,6 +32,8 @@ import retrofit2.Response;
 import retrofit2.mock.Calls;
 
 public class WorkFlowRunServiceTest {
+
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private String eventData =
       "id: 0\n"
@@ -155,6 +159,22 @@ public class WorkFlowRunServiceTest {
     assertEquals(100, result.getUsage().getTokenCount());
     assertEquals(50, result.getUsage().getInputCount());
     assertEquals(50, result.getUsage().getOutputCount());
+  }
+
+  @Test
+  void testRunWorkflowReqSerializesWorkflowVersion() throws Exception {
+    RunWorkflowReq req =
+        RunWorkflowReq.builder()
+            .workflowID("test_workflow_id")
+            .appID("test_app_id")
+            .workflowVersion("1.2.3")
+            .build();
+
+    JsonNode json = OBJECT_MAPPER.readTree(OBJECT_MAPPER.writeValueAsString(req));
+
+    assertEquals("1.2.3", json.get("workflow_version").asText());
+    assertEquals("test_workflow_id", json.get("workflow_id").asText());
+    assertEquals("test_app_id", json.get("app_id").asText());
   }
 
   @Test
